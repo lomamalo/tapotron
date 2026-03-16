@@ -65,13 +65,17 @@ void Encoder() {
     Last_Run = millis();
 
     if (digitalRead(4) == 1) {
+
       if (Counter < 241) Counter++;
       if (Counter == 241) Counter = 40;
+
     }
 
     if (digitalRead(4) == 0) {
+
       if (Counter > 39) Counter--;
       if (Counter == 39) Counter = 240;
+
     }
   }
 }
@@ -81,8 +85,10 @@ void Encoder() {
 void Button() {
 
   if (millis() - LastButton > 500) {
+
     LastButton = millis();
     ValButton = !ValButton;
+
   }
 }
 
@@ -112,12 +118,12 @@ void SelecTempo() {
     case 3:
       Tempo3();
       break;
+
   }
 }
 
 
 // Tempos function
-
 void Tempo0() {
 
   Period = 60000 / Counter;
@@ -130,6 +136,7 @@ void Tempo0() {
 
     tone(8, 1000, 20);
     digitalWrite(A4, HIGH);
+
   }
 }
 
@@ -144,14 +151,18 @@ void Tempo1() {
     Previous = Current;
 
     if (State1 == 1) {
+
       State1 = 2;
       tone(8, 1000, 20);
       digitalWrite(A4, HIGH);
+
     }
 
     else if (State1 == 2) {
+
       State1 = 1;
       tone(8, 250, 20);
+
     }
   }
 }
@@ -167,19 +178,25 @@ void Tempo2() {
     Previous = Current;
 
     if (State2 == 1) {
+
       State2 = 2;
       tone(8, 1000, 20);
       digitalWrite(A4, HIGH);
+
     }
 
     else if (State2 == 2) {
+
       State2 = 3;
       tone(8, 250, 20);
+
     }
 
     else if (State2 == 3) {
+
       State2 = 1;
       tone(8, 250, 20);
+
     }
   }
 }
@@ -195,24 +212,106 @@ void Tempo3() {
     Previous = Current;
 
     if (State3 == 1) {
+
       State3 = 2;
       tone(8, 1000, 20);
       digitalWrite(A4, HIGH);
+
     }
 
     else if (State3 == 2) {
+
       State3 = 3;
       tone(8, 250, 20);
+
     }
 
     else if (State3 == 3) {
+
       State3 = 4;
       tone(8, 250, 20);
+
     }
 
     else if (State3 == 4) {
+
       State3 = 1;
       tone(8, 250, 20);
+
     }
   }
+}
+
+
+// Display function
+void Display() {
+
+  Var = Counter;
+
+  Ones = Var % 10;
+  Var = Var / 10;
+
+  Tens = Var % 10;
+  Hundreds = Var / 10;
+
+  lc.setDigit(0, 2, (byte)Hundreds, false);
+  lc.setDigit(0, 1, (byte)Tens, false);
+  lc.setDigit(0, 0, (byte)Ones, false);
+
+}
+
+
+// Tap function
+void Tap() {
+
+  if (ValButton == 1) { // Word display
+
+    lc.setRow(0, 0, 0x67); // t
+    lc.setRow(0, 1, 0x7D); // a
+    lc.setRow(0, 2, 0x7);  // p
+
+  }
+
+  while (ValButton == 1) {
+
+    Piezo = analogRead(A5);
+
+    if (Piezo > ThresP && PState == 0) {
+
+      PState = 1;
+
+      StartTap = millis();
+      Interval = StartTap - EndTap;
+
+      Counter = 60000 / (float)Interval;
+      Counter = constrain(Counter, 40, 240);
+
+      delay(DebounceP);
+
+    }
+
+    else if (Piezo > ThresP && PState == 1) {
+
+      PState = 0;
+
+      EndTap = millis();
+      Interval = EndTap - StartTap;
+
+      Counter = 60000 / (float)Interval;
+      Counter = constrain(Counter, 40, 240);
+
+      delay(DebounceP);
+
+    }
+  }
+}
+
+
+// LOOP
+void loop() {
+
+  Tap();
+  Display();
+  SelecTempo();
+
 }
